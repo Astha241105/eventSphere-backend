@@ -75,6 +75,7 @@ export const verifyOTP = async (req, res) => {
       password: record.password,
       role: record.role
     });
+    console.log(`User ${email} registered successfully`);
 
     await Otp.deleteOne({ email });
 
@@ -114,6 +115,88 @@ export const login = async (req, res) => {
         email: user.email,
         role: user.role
       }
+    });
+
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+// FORGOT PASSWORD - send OTP
+export const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    const user = await User.findOne({ email });
+
+    if (!user)
+      return res.status(404).json({ message: "User not found" });
+
+    const otp = otpGenerator.generate(6, {
+      upperCaseAlphabets: false,
+      lowerCaseAlphabets: false,
+      specialChars: false
+    });
+
+    console.log(`Reset OTP for ${email}: ${otp}`);
+
+    // remove previous otp if exists
+    await Otp.deleteMany({ email });
+
+    await Otp.create({
+      email,
+      otp
+    });
+
+    await sendOTP(email, otp);
+
+    res.status(200).json({
+      message: "OTP sent to email"
+    });
+
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+
+// VERIFY RESET OTP
+export const verifyResetOtp = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    const record = await Otp.findOne({ email });
+
+    if (!record || record.otp !== otp)
+      return res.status(400).json({ message: "Invalid or expired OTP" });
+
+    res.status(200).json({
+      message: "OTP verified"
+    });
+
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+// RESET PASSWORD
+export const resetPassword = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const user = await User.findOneAndUpdate(
+      { email },
+      { password: hashedPassword },
+      { new: true }
+    );
+
+    if (!user)
+      return res.status(404).json({ message: "User not found" });
+
+    await Otp.deleteMany({ email });
+
+    res.status(200).json({
+      message: "Password updated successfully"
     });
 
   } catch (error) {
