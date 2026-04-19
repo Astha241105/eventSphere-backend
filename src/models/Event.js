@@ -1,22 +1,41 @@
-import mongoose from "mongoose";
+const express = require("express");
+const router = express.Router();
 
-const eventSchema = new mongoose.Schema({
-  title: String,
-  description: String,
-  date: {
-    type: Date,
-    required: true,
-  },
-  location: String,
-  type: {
-    type: String,
-    enum: ["online", "offline"],
-  },
+const {
+  uploadCover,
+  createEvent,
+  getAllEvents,
+  getEventById,
+  updateEvent,
+  deleteEvent,
+  getMyEvents,
+} = require("../controllers/createevent");
 
-  hostId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-  },
-}, { timestamps: true });
+const { protect, authorizeRoles } = require("../middleware/authMiddleware");
 
-export default mongoose.model("Event", eventSchema);
+// Public routes
+router.get("/",     getAllEvents);
+router.get("/:id",  getEventById);
+
+// Private routes
+router.get("/host/my-events", protect, authorizeRoles("host"), getMyEvents);
+
+router.post(
+  "/",
+  protect,
+  authorizeRoles("host"),
+  uploadCover,
+  createEvent
+);
+
+router.put(
+  "/:id",
+  protect,
+  authorizeRoles("host"),
+  uploadCover,
+  updateEvent
+);
+
+router.delete("/:id", protect, authorizeRoles("host"), deleteEvent);
+
+module.exports = router;
