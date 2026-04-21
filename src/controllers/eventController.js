@@ -1,7 +1,12 @@
-const path = require("path");
-const fs = require("fs");
-const multer = require("multer");
-const Event = require("../models/Event");
+import fs from "fs";
+import multer from "multer";
+import Event from "../models/Event.js";
+import { fileURLToPath } from "url";
+import path from "path";
+
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // ── Multer config ──────────────────────────────────────────
 const uploadsDir = path.join(__dirname, "../../uploads");
@@ -184,7 +189,7 @@ const getMyEvents = async (req, res) => {
   }
 };
 
-module.exports = {
+export {
   uploadCover,
   createEvent,
   getAllEvents,

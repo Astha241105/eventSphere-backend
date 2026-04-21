@@ -1,45 +1,41 @@
-const mongoose = require("mongoose");
+import express from "express";
+const router = express.Router();
 
-const eventSchema = new mongoose.Schema(
-  {
-    eventName:          { type: String, required: true, trim: true },
-    category:           { type: String, enum: ["Hackathon", "Webinar", "Seminar", "Quiz"], default: "Hackathon" },
-    description:        { type: String, default: "" },
-    tagline:            { type: String, default: "" },
-    coverImage:         { type: String, default: null },   // stored file path
+import  {
+  uploadCover,
+  createEvent,
+  getAllEvents,
+  getEventById,
+  updateEvent,
+  deleteEvent,
+  getMyEvents,
+} from"../controllers/eventController.js";
 
-    registrationOpen:   { type: Date },
-    registrationClose:  { type: Date },
-    eventStart:         { type: Date },
-    eventEnd:           { type: Date },
-    submissionDeadline: { type: Date },
-    resultsDate:        { type: Date },
+import { protect, authorizeRoles } from "../middleware/authMiddleware.js";
 
-    mode:               { type: String, enum: ["in-person", "online", "hybrid"], default: "hybrid" },
-    venueName:          { type: String, default: "" },
-    venueAddress:       { type: String, default: "" },
-    city:               { type: String, default: "" },
-    onlineLink:         { type: String, default: "" },
+// Public routes
+router.get("/",     getAllEvents);
+router.get("/:id",  getEventById);
 
-    minTeamSize:        { type: Number, default: 1 },
-    maxTeamSize:        { type: Number, default: 4 },
-    eligibleFor:        { type: [String], default: [] },
-    ageMin:             { type: String, default: "" },
-    ageMax:             { type: String, default: "" },
-    skills:             { type: String, default: "" },
-    openTo:             { type: String, enum: ["everyone", "students", "professionals"], default: "everyone" },
+// Private routes
+router.get("/host/my-events", protect, authorizeRoles("host"), getMyEvents);
 
-    firstPrize:         { type: String, default: "" },
-    secondPrize:        { type: String, default: "" },
-    thirdPrize:         { type: String, default: "" },
-    totalPool:          { type: String, default: "" },
-
-    status:             { type: String, enum: ["draft", "review", "live"], default: "review" },
-
-    // Reference to the host who created the event
-    createdBy:          { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-  },
-  { timestamps: true }
+router.post(
+  "/",
+  protect,
+  authorizeRoles("host"),
+  uploadCover,
+  createEvent
 );
 
-module.exports = mongoose.model("Event", eventSchema);
+router.put(
+  "/:id",
+  protect,
+  authorizeRoles("host"),
+  uploadCover,
+  updateEvent
+);
+
+router.delete("/:id", protect, authorizeRoles("host"), deleteEvent);
+
+export default router
