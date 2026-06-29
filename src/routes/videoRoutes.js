@@ -1,6 +1,6 @@
 import express from "express";
 import { getRoomStatus, getRoomParticipants } from "../controllers/videoController.js";
-import authMiddleware from "../middleware/authMiddleware.js";
+import { protect, authorizeRoles } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
@@ -9,9 +9,9 @@ const router = express.Router();
 export const roomStore = new Map();
 
 // GET /api/video/room/:eventId/status
-router.get("/room/:eventId/status", authMiddleware, getRoomStatus);
+router.get("/room/:eventId/status", protect, getRoomStatus);
 
 // GET /api/video/room/:eventId/participants
-router.get("/room/:eventId/participants", authMiddleware, getRoomParticipants(roomStore));
+router.get("/room/:eventId/participants", protect, getRoomParticipants(roomStore));
 
 export { router };

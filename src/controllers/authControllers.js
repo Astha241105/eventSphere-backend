@@ -1,5 +1,6 @@
 import User from "../models/User.js";
 import Otp from "../models/Otp.js";
+import ResetOtp from "../models/ResetOtp.js";
 import otpGenerator from "otp-generator";
 import bcrypt from "bcrypt";   // For hashing passwords
 import jwt from "jsonwebtoken"; // For generating JWT tokens and verifying them
@@ -140,14 +141,19 @@ export const forgotPassword = async (req, res) => {
     console.log(`Reset OTP for ${email}: ${otp}`);
 
     // remove previous otp if exists
-    await Otp.deleteMany({ email });
+    await ResetOtp.deleteMany({ email });
 
-    await Otp.create({
+    await ResetOtp.create({
       email,
       otp
     });
 
-    await sendOTP(email, otp);
+    try {
+  await sendOTP(email, otp);
+  console.log("Email sent successfully");
+} catch (err) {
+  console.log("Email sending error:", err);
+}
 
     res.status(200).json({
       message: "OTP sent to email"
@@ -164,23 +170,46 @@ export const verifyResetOtp = async (req, res) => {
   try {
     const { email, otp } = req.body;
 
-    const record = await Otp.findOne({ email });
+    const record = await ResetOtp.findOne({ email });
 
-    if (!record || record.otp !== otp)
-      return res.status(400).json({ message: "Invalid or expired OTP" });
+    if (!record) {
+      return res.status(400).json({
+        message: "OTP expired"
+      });
+    }
 
-    res.status(200).json({
-      message: "OTP verified"
+    if (record.otp !== otp) {
+      return res.status(400).json({
+        message: "Invalid OTP"
+      });
+    }
+
+    // Optional: Mark OTP as verified
+    record.verified = true;
+    await record.save();
+
+    return res.status(200).json({
+      message: "OTP verified successfully"
     });
 
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({
+      message: error.message
+    });
   }
 };
 // RESET PASSWORD
 export const resetPassword = async (req, res) => {
   try {
     const { email, password } = req.body;
+
+    const otpRecord = await ResetOtp.findOne({ email });
+
+    if (!otpRecord || !otpRecord.verified) {
+      return res.status(400).json({
+        message: "Please verify OTP first"
+      });
+    }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -190,16 +219,22 @@ export const resetPassword = async (req, res) => {
       { new: true }
     );
 
-    if (!user)
-      return res.status(404).json({ message: "User not found" });
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found"
+      });
+    }
 
-    await Otp.deleteMany({ email });
+    // Remove OTP after password reset
+    await ResetOtp.deleteMany({ email });
 
-    res.status(200).json({
+    return res.status(200).json({
       message: "Password updated successfully"
     });
 
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({
+      message: error.message
+    });
   }
 };

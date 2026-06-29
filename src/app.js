@@ -5,9 +5,12 @@ import { Server } from "socket.io";
 
 import authRoutes from "./routes/authRoutes.js";
 import profileRoutes from "./routes/profileRoutes.js";
-import eventRoutes from "./routes/events.js";
+import eventRoutes from "./routes/eventsRoutes.js";
 import { router as videoRoutes, roomStore } from "./routes/videoRoutes.js";
+import quizRoutes from "./routes/Quizroutes.js"; // Import the quiz routes
 import setupSignaling from "./socket/socketSignaling.js";
+import registrationRoutes from "./routes/registrationRoutes.js";
+import teamRoutes from "./routes/teamRoutes.js";
 
 import { fileURLToPath } from "url";
 import path from "path";
@@ -41,6 +44,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/events", eventRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/video", videoRoutes);
-
+app.use("/api/quiz", quizRoutes); // Use the quiz routes
+app.use("/api/registrations", registrationRoutes);
+app.use("/api/teams", teamRoutes);
 export { server };
 export default app;

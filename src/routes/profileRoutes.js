@@ -1,18 +1,18 @@
 import express from "express";
 import { protect } from "../middleware/authMiddleware.js";
-
 import {
   getProfile,
-  getUpcomingEvents,
-  getPastEvents,
-  getFavouriteEvents
+  getUpcoming,
+  getPast,
+  getOngoing,
 } from "../controllers/profileControllers.js";
 
 const router = express.Router();
 
-router.get("/", protect, getProfile);
-router.get("/upcoming", protect, getUpcomingEvents);
-router.get("/past", protect, getPastEvents);
-router.get("/favourites", protect, getFavouriteEvents);
+// All profile routes require auth
+router.get("/",         protect, getProfile);
+router.get("/upcoming", protect, getUpcoming);
+router.get("/past",     protect, getPast);
+router.get("/ongoing",  protect, getOngoing);  // replaces /favourites
 
 export default router;

@@ -2,7 +2,7 @@ export default function setupSignaling(io, roomStore) {
   io.on("connection", (socket) => {
     console.log(`[WS] Client connected: ${socket.id}`);
 
-    // ── JOIN ROOM ─────────────────────────────────────────────────────────────
+    // ── JOIN ROOM ───────────────────────────────────────────────────────────
     socket.on("join-room", ({ eventId, userId, userName }) => {
       if (!eventId) return;
 
